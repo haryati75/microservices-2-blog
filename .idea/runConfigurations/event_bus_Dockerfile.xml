@@ -2,7 +2,7 @@
   <configuration default="false" name="event-bus/Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="imageTag" value="haryati/event-bus" />
+        <option name="imageTag" value="haryati75/event-bus" />
         <option name="containerName" value="event-bus" />
         <option name="sourceFilePath" value="event-bus/Dockerfile" />
       </settings>

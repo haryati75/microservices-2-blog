@@ -7,4 +7,4 @@ metadata:
 spec:
     containers:
         - name: posts
-          image: haryati/posts:0.0.1
+          image: haryati75/posts:0.0.1

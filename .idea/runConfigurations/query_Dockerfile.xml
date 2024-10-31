@@ -2,7 +2,7 @@
   <configuration default="false" name="query/Dockerfile" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="imageTag" value="haryati/query" />
+        <option name="imageTag" value="haryati75/query" />
         <option name="containerName" value="query" />
         <option name="sourceFilePath" value="query/Dockerfile" />
       </settings>
