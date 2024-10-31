@@ -1,0 +1,10 @@
+# not the usual way to create a pod, but this is for learning purposes
+# in real world, we would use deployment file instead
+apiVersion: v1
+kind: Pod
+metadata:
+    name: posts
+spec:
+    containers:
+        - name: posts
+          image: haryati/posts:0.0.1
