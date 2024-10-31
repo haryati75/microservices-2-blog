@@ -46,3 +46,4 @@ and the query service is responsible for querying the posts and comments.
       ```
       curl http://localhost:4000/posts/1/comments
       ```
+      
