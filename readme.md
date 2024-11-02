@@ -36,6 +36,9 @@ The blog application uses the following technologies:
 For Service with NodePort:
 6. Posts Service - http://posts-srv:4000
 
+For Ingress Nginx:
+7. Posts Service - http://posts.com
+
 For Client:
 7. Client - http://localhost:3000
 
@@ -158,7 +161,7 @@ Run the following ```kubectl``` after updating an image:
 ```bash
 kubectl rollout restart deployment <deployment-name>
 ```
-
+#### Ingress Nginx in Kubernetes
 To check for ingress-nginx:
 ```bash
 kubectl get services -n ingress-nginx
@@ -178,3 +181,15 @@ The output should be:
 ```
 pod/ingress-nginx-controller condition met
 ```
+
+For local development, add the following to the ```hosts``` file:
+```bash
+127.0.0.1 posts.com
+```
+For Windows, the hosts file is located at ```C:\Windows\System32\drivers\etc\hosts```
+For Mac/Linux, the hosts file is located at ```/etc/hosts```
+
+Note on Ingress Nginx:
+* The Ingress Nginx controller is a load balancer that routes traffic to the services in the Kubernetes cluster.
+* It does not differentiate the http methods (GET, POST, PUT, DELETE) and routes all traffic to the services.
+* 
