@@ -3,6 +3,7 @@
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="haryati75/query" />
+        <option name="buildOnly" value="true" />
         <option name="containerName" value="query" />
         <option name="sourceFilePath" value="query/Dockerfile" />
       </settings>

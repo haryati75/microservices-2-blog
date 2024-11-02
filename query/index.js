@@ -49,7 +49,7 @@ app.listen(4002, async () => {
   console.log('Query service listening on 4002');
 
   // get all events from event bus
-  const res = await axios.get('http://localhost:4005/events').catch((err) => {
+  const res = await axios.get('http://event-bus-srv:4005/events').catch((err) => {
     console.log(err.message);
   });
 
