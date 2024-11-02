@@ -13,6 +13,7 @@ app.get('/events', (req, res) => {
 
 app.post('/events', (req, res) => {
     const event = req.body;
+    console.log('Received Event', event.type);
 
     events.push(event);
 
