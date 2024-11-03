@@ -18,13 +18,17 @@ The blog application uses the following technologies:
 1. NodeJS / Express
 2. React
 
+It is not suitable for production use.  Use for learning.
+
 ### 3rd party apps and services in local development
 1. Docker Desktop with Docker Hub account
 2. Kubernetes (enabled in Docker Desktop)
 3. Ingress Nginx (install using Helm) 
    * Installation guide: https://kubernetes.github.io/ingress-nginx/deploy/#using-helm
-4. IntelliJ IDEA (optional) or Visual Studio Code
-5. Postman (optional)
+4. Skaffold (install using Chocolatey)
+   * Installation guide: https://skaffold.dev/docs/install/
+5. IntelliJ IDEA (optional) or Visual Studio Code
+6. Postman (optional)
 
 #### Kubernetes Services and ClusterIP/Port
 1. Posts Service - http://posts-clusterip-srv:4000
@@ -146,6 +150,8 @@ kubectl apply -f posts-srv.yaml
 kubectl apply -f comments-depl.yaml
 kubectl apply -f query-depl.yaml
 kubectl apply -f moderation-depl.yaml
+kubectl apply -f client-depl.yaml
+kubectl apply -f ingress-srv.yaml
 ```
 
 To get the Kubernetes pods, services and deployments:
@@ -192,4 +198,12 @@ For Mac/Linux, the hosts file is located at ```/etc/hosts```
 Note on Ingress Nginx:
 * The Ingress Nginx controller is a load balancer that routes traffic to the services in the Kubernetes cluster.
 * It does not differentiate the http methods (GET, POST, PUT, DELETE) and routes all traffic to the services.
-* 
+
+#### Skaffold
+Skaffold is a tool that automates the development workflow for Kubernetes applications. It is used to build, push and deploy the services in Kubernetes.
+
+To run Skaffold:
+```bash
+skaffold dev
+```
+
