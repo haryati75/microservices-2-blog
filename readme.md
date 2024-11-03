@@ -1,5 +1,10 @@
 ## Microservices Using Node.js and React
-### Blog
+by Stephen Grider on Udemy
+
+Student: Haryati Hassan
+Started: 2024-Oct
+
+### Blog Application
 This is a simple blog application that uses microservices architecture. The blog application consists of 3 services:
 1. Posts
 2. Comments
@@ -84,6 +89,7 @@ For Client:
       ```
       
 ---
+
 #### Running the Application
 1. Clone the repository
 2. Use npm install to install all the dependencies for each service and the client
@@ -138,6 +144,13 @@ docker run -p 4002:4002 haryati75/query
 docker run -p 4005:4005 haryati75/event-bus
 docker run -p 4003:4003 haryati75/moderation
 ```
+
+4. To clean up unused images, containers and volumes:
+```bash
+docker system prune -a --volumes
+docker image prune -a
+```
+
 ---
 ### Running the application in Kubernetes
 
