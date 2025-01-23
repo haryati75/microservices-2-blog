@@ -4,17 +4,17 @@ metadata:
   name: posts-depl
 spec:
   replicas: 1
-  selector:
+  selector:  # find pods that have matching labels
     matchLabels:
       app: posts
   template:
-    metadata:
+    metadata: # specify the label that will be tag when pods are created
       labels:
         app: posts
-    spec:
+    spec:  # pods to be created
       containers:
         - name: posts
-          image: haryati75/posts
+          image: haryati75/posts  # docker image to create the container
 ---
 apiVersion: v1
 kind: Service
