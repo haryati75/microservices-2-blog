@@ -54,4 +54,4 @@ build:
             dest: .
 manifests:
   rawYaml:
-    - infra/k8s/*
+    - ./infra/k8s/*

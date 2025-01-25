@@ -11,25 +11,31 @@ app.get('/events', (req, res) => {
     res.send(events);
 });
 
-app.post('/events', (req, res) => {
+app.post('/events', async (req, res) => {
     const event = req.body;
-    console.log('Received Event', event.type);
+    console.log('Event Bus Received Event', event.type);
 
     events.push(event);
 
     // post generic event to all services
-    axios.post('http://posts-clusterip-srv:4000/events', event).catch((err) => {
-        console.log(err.message);
-    });
-    axios.post('http://comments-srv:4001/events', event).catch((err) => {
-        console.log(err.message);
-    });
-    axios.post('http://query-srv:4002/events', event).catch((err) => {
-        console.log(err.message);
-    });
-    axios.post('http://moderation-srv:4003/events', event).catch((err) => {
-        console.log(err.message);
-    });
+    const services = [
+        'http://posts-clusterip-srv:4000/events',
+        'http://comments-srv:4001/events',
+        'http://query-srv:4002/events',
+        'http://moderation-srv:4003/events'
+    ];
+
+    // Wait for all services to respond
+    const results = await Promise.allSettled(
+      services.map((url) => axios.post(url, event))
+    );
+
+    console.log('Rejected results:', results
+      .filter(result => result.status === 'rejected')
+      .map(result => result.value.data));
+    console.log('Fulfilled results:', results
+      .filter(result => result.status === 'fulfilled')
+      .map(result => result.value.data));
 
     res.send({ status: 'OK' });
 });

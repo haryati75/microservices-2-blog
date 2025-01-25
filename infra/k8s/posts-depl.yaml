@@ -15,14 +15,15 @@ spec:
       containers:
         - name: posts
           image: haryati75/posts  # docker image to create the container
----
+--- # separator between different k8s objects
 apiVersion: v1
 kind: Service
 metadata:
-  name: posts-clusterip-srv
+  name: posts-clusterip-srv # different name from posts-srv in posts-srv.yaml (NodePort)
 spec:
   selector:
     app: posts
+  type: ClusterIP # default type for service object
   ports:
     - name: posts
       protocol: TCP

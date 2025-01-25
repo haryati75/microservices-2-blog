@@ -52,10 +52,13 @@ app.listen(4002, async () => {
   // get all events from event bus
   const res = await axios.get('http://event-bus-srv:4005/events').catch((err) => {
     console.log(err.message);
+    return { data: [] }; // Return an empty array if there's an error
   });
 
-  for (let event of res.data) {
-    console.log('Processing event:', event.type);
-    handleEvent(event.type, event.data);
+  if (res.data) {
+    for (let event of res.data) {
+      console.log('Processing event:', event.type);
+      handleEvent(event.type, event.data);
+    }
   }
 });

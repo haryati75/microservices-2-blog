@@ -7,10 +7,10 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: posts.com
+    - host: posts.com # base domain
       http:
-        paths:
-          - path: /posts/create
+        paths: # path order matters, from specific to general
+          - path: /posts/create  # nginx does not differentiate HTTP methods
             pathType: Prefix
             backend:
               service:
@@ -18,20 +18,20 @@ spec:
                 port:
                   number: 4000
           - path: /posts
-            pathType: Prefix
+            pathType: Prefix # for exact path
             backend:
               service:
                 name: query-srv
                 port:
                   number: 4002
-          - path: /posts/?(.*)/comments
-            pathType: ImplementationSpecific
+          - path: /posts/?(.*)/comments  # does not identify params from path
+            pathType: ImplementationSpecific  # for regex path
             backend:
               service:
                 name: comments-srv
                 port:
                   number: 4001
-          - path: /?(.*)     # all other paths
+          - path: /?(.*)     # all other paths must be last
             pathType: ImplementationSpecific
             backend:
               service:

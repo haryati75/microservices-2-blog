@@ -30,10 +30,13 @@ It is not suitable for production use.  Use for learning.
 2. Kubernetes (enabled in Docker Desktop)
 3. Ingress Nginx (install using Helm) 
    * Installation guide: https://kubernetes.github.io/ingress-nginx/deploy/#using-helm
+   * Repository: https://github.com/kubernetes/ingress-nginx
 4. Skaffold (install using Chocolatey)
    * Installation guide: https://skaffold.dev/docs/install/
 5. IntelliJ IDEA (optional) or Visual Studio Code
 6. Postman (optional)
+
+***Installation note***: `Ingress Nginx` and NOT Nginx Ingress library 
 
 #### Kubernetes Services and ClusterIP/Port
 1. Posts Service - http://posts-clusterip-srv:4000
@@ -46,7 +49,7 @@ For Service with NodePort:
 6. Posts Service - http://posts-srv:4000
 
 For Ingress Nginx:
-7. Posts Service - http://posts.com
+7. Posts Service - http://posts.com (localhost using hosts file)
 
 For Client:
 7. Client - http://localhost:3000
@@ -56,16 +59,16 @@ For Client:
 #### API Endpoints via localhost
 ##### Posts Service
 1. Create Post
-   - POST /posts
-   - Request Body: { title: string }
-   - Response: { id: string, title: string, comments: [] }
+   - `POST /posts`
+   - Request Body: `{ title: string }`
+   - Response: `{ id: string, title: string, comments: [] }`
    - Example: 
      ```
      curl -X POST -H "Content-Type: application/json" -d '{"title": "Post Title"}' http://localhost:4000/posts
      ```
 2. Get Posts
-    - GET /posts
-    - Response: [{ id: string, title: string, comments: [] }]
+    - `GET /posts`
+    - Response: `[{ id: string, title: string, comments: [] }]`
     - Example: 
       ```
       curl http://localhost:4000/posts
@@ -73,15 +76,15 @@ For Client:
 
 ##### Comments Service
 1. Create Comment
-    - POST /posts/:id/comments
-    - Request Body: { content: string }
-    - Response: { id: string, content: string }
+    - `POST /posts/:id/comments`
+    - Request Body: `{ content: string }`
+    - Response: `{ id: string, content: string }`
     - Example: 
       ```
       curl -X POST -H "Content-Type: application/json" -d '{"content": "Comment Content"}' http://localhost:4000/posts/1/comments
       ```
 2. Get Comments
-    - GET /posts/:id/comments
+    - `GET /posts/:id/comments`
     - Response: [{ id: string, content: string }]
     - Example: 
       ```
@@ -117,6 +120,7 @@ The images for the services are available on Docker Hub:
 
 #### Docker cheatsheet
 **To build the images and run the containers:**
+1. Change URLs in all index.js to localhost instead of k8 service names
 
 1. Go to the root directory of the service and run the following commands:
 ```bash
@@ -151,6 +155,11 @@ docker system prune -a --volumes
 docker image prune -a
 ```
 
+5. To execute shell in container:
+```bash
+docker exec it <container)id> sh
+```
+
 ---
 ### Running the application in Kubernetes
 
@@ -180,7 +189,20 @@ Run the following ```kubectl``` after updating an image:
 ```bash
 kubectl rollout restart deployment <deployment-name>
 ```
-#### Ingress Nginx in Kubernetes
+### _Ingress Nginx_ in Kubernetes
+Pre-requisite: Helm is installed in the local machine. Helm is a package manager for Kubernetes.
+To install Ingress Nginx in Kubernetes, use Helm:
+```bash
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
+```
+
+Without Helm, use the following command:
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/cloud/deploy.yaml
+```
+
 To check for ingress-nginx:
 ```bash
 kubectl get services -n ingress-nginx
@@ -201,22 +223,62 @@ The output should be:
 pod/ingress-nginx-controller condition met
 ```
 
-For local development, add the following to the ```hosts``` file:
+#### Setting up posts.com locally
+
+1. apply the ingress-srv.yaml file
+```bash
+kubectl apply -f ingress-srv.yaml
+```
+2. ensure port 80 is not used by other services, except for Docker backend
+```powershell
+netstat -anb
+```
+Scroll to the top of the output: 
+```
+Active Connections
+
+  Proto  Local Address          Foreign Address        State
+  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING
+ [com.docker.backend.exe]
+```
+
+3. Add the following to the ```hosts``` file:
 ```bash
 127.0.0.1 posts.com
 ```
 For Windows, the hosts file is located at ```C:\Windows\System32\drivers\etc\hosts```
 For Mac/Linux, the hosts file is located at ```/etc/hosts```
 
+
 Note on Ingress Nginx:
 * The Ingress Nginx controller is a load balancer that routes traffic to the services in the Kubernetes cluster.
 * It does not differentiate the http methods (GET, POST, PUT, DELETE) and routes all traffic to the services.
 
 #### Skaffold
-Skaffold is a tool that automates the development workflow for Kubernetes applications. It is used to build, push and deploy the services in Kubernetes.
+Skaffold is a tool that automates the development workflow for Kubernetes applications. 
+It is used to build, push and deploy the services in Kubernetes.
 
-To run Skaffold:
+1. Install Skaffold using Chocolatey in Windows:
+```bash
+choco install -y skaffold
+```
+
+2. To run Skaffold, use the following command in the root directory of the project where the skaffold.yaml file is located:
 ```bash
 skaffold dev
 ```
 
+3. To ensure hot reload, package.json file in each backend service should have the following:
+```JSON
+"scripts": { 
+  "start": "nodemon index.js"
+}
+```
+For React, it is currently hot reloaded by react-scripts/CRA.
+
+This means, any code changes will be automatically reflected in the running containers.
+
+4. To stop Skaffold, use the following command in the running Skaffold terminal:
+```
+CTRL + C
+```

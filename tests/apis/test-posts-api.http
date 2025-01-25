@@ -1,0 +1,27 @@
+### Test K8 Services NodePort and ClusterIP
+POST http://localhost:30340/posts/create
+Content-Type: application/json
+
+{
+  "title": "Another orange post"
+}
+###
+
+### Test K8 Services NodePort and ClusterIP
+GET http://localhost:30340/posts
+
+###
+
+
+### Create a new post
+POST http://posts.com/posts/create
+Content-Type: application/json
+
+{
+  "title": "A not so orange post"
+}
+
+### GET all posts
+GET http://posts.com/posts
+
+###
