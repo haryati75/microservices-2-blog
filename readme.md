@@ -4,7 +4,7 @@ by Stephen Grider on Udemy
 Student: Haryati Hassan
 Started: 2024-Oct
 
-> TODO: Investigate and fix `skaffold dev` issues so the k8s-first local workflow is reliable.
+> TODO: Investigate and fix local k8s workflow reliability; Skaffold dev currently failing.
 
 ### Blog Application
 This is a simple blog application that uses microservices architecture. The blog application consists of 3 services:
@@ -34,10 +34,10 @@ It is not suitable for production use.  Use for learning.
 3. Ingress Nginx (install using Helm) 
    * Installation guide: https://kubernetes.github.io/ingress-nginx/deploy/#using-helm
    * Repository: https://github.com/kubernetes/ingress-nginx
-4. Skaffold (install using Chocolatey)
-   * Installation guide: https://skaffold.dev/docs/install/
+4. (Optional) Helm for ingress-nginx installation
 5. IntelliJ IDEA (optional) or Visual Studio Code
 6. Postman (optional)
+7. (Optional) Skaffold (currently failing; needs investigation)
 
 ***Installation note***: `Ingress Nginx` and NOT Nginx Ingress library 
 
@@ -122,10 +122,44 @@ The images for the services are available on Docker Hub:
 6. Client: haryati75/client
 
 ### Preferred local dev workflow (Kubernetes-first)
-- Use a local Kubernetes (minikube, kind, or Docker Desktop) because service URLs in the source code expect k8s DNS names (`*-srv`).
-- Install ingress-nginx and map `posts.com` to the ingress address (hosts file for minikube/kind).
-- Run `skaffold dev` from repo root for live build/redeploy; if Skaffold is failing, fall back temporarily to manual `kubectl apply -f infra/k8s` and `kubectl rollout restart deployment <name>` after image rebuilds.
+- Use Docker Desktop Kubernetes because service URLs in the source code expect k8s DNS names (`*-srv`).
+- Install ingress-nginx and map `posts.com` to the ingress address (hosts file).
+- Apply manifests manually: `kubectl apply -f infra/k8s` and use `kubectl rollout restart deployment <name>` after image rebuilds.
 - For targeted debugging, `kubectl port-forward svc/<service-name> <local-port>:<service-port>`.
+
+#### Dev loop: reflect code changes into k8s (Docker Desktop)
+1. Edit code for a service (e.g., `posts/`).
+2. Rebuild the image (Docker Desktop shares the daemon with k8s):
+  ```bash
+  docker build -t haryati75/posts:latest ./posts
+  ```
+  If your cluster cannot see the local daemon, also push:
+  ```bash
+  docker push haryati75/posts:latest
+  ```
+3. Restart the deployment to pull the new image:
+  ```bash
+  kubectl rollout restart deployment posts-depl
+  kubectl rollout status deployment posts-depl
+  ```
+4. Verify pods/logs:
+  ```bash
+  kubectl get pods -l app=posts
+  kubectl logs -f deploy/posts-depl
+  ```
+5. Repeat for other services, swapping image and deployment names (`comments`, `query`, `moderation`, `event-bus`, `client`).
+
+Notes:
+- Images in manifests default to `latest`; keep local builds and cluster in sync. For stricter control, tag with a version or git SHA and use `kubectl set image deployment/<name> <container>=haryati75/<svc>:<tag>`.
+- Ensure the same Node version is used locally and in images to reduce `package-lock` churn and runtime drift.
+
+#### Skaffold (currently failing—investigate)
+- Install: https://skaffold.dev/docs/install/
+- Typical usage (from repo root):
+  ```bash
+  skaffold dev
+  ```
+- If it fails, fall back to the manual dev loop above and capture logs for investigation. Track fixes under the TODO at the top of this README.
 
 ### Note on plain Docker/localhost
 - The service code references Kubernetes service DNS names (e.g., `event-bus-srv`, `posts-clusterip-srv`, `comments-srv`). Running containers directly with `docker run` without changing these URLs will fail to resolve dependencies.
@@ -223,21 +257,9 @@ Note on Ingress Nginx:
 * The Ingress Nginx controller is a load balancer that routes traffic to the services in the Kubernetes cluster.
 * It does not differentiate the http methods (GET, POST, PUT, DELETE) and routes all traffic to the services.
 
-#### Skaffold
-Skaffold is a tool that automates the development workflow for Kubernetes applications. 
-It is used to build, push and deploy the services in Kubernetes.
-
-1. Install Skaffold using Chocolatey in Windows:
-```bash
-choco install -y skaffold
-```
-
-2. To run Skaffold, use the following command in the root directory of the project where the skaffold.yaml file is located:
-```bash
-skaffold dev
-```
-
-3. To ensure hot reload, package.json file in each backend service should have the following:
+#### Hot reload
+To ensure hot reload in local k8s:
+1. Ensure each backend service `package.json` has:
 ```JSON
 "scripts": { 
   "start": "nodemon index.js"
@@ -247,7 +269,28 @@ For React, it is currently hot reloaded by react-scripts/CRA.
 
 This means, any code changes will be automatically reflected in the running containers.
 
-4. To stop Skaffold, use the following command in the running Skaffold terminal:
-```
-CTRL + C
-```
+### Clean up local Kubernetes (Docker Desktop)
+- Remove app resources deployed from this repo:
+  ```bash
+  # from repo root
+  kubectl delete -f infra/k8s
+  # if you applied NodePort separately
+  kubectl delete -f infra/k8s/posts-srv.yaml
+  ```
+- Verify nothing remains (optional):
+  ```bash
+  kubectl get all
+  kubectl get ingress
+  ```
+- Uninstall ingress-nginx (if installed):
+  - If installed via Helm:
+    ```bash
+    helm uninstall ingress-nginx -n ingress-nginx
+    kubectl delete namespace ingress-nginx
+    ```
+  - If installed via raw manifest:
+    ```bash
+    kubectl delete -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/cloud/deploy.yaml
+    ```
+- Clean up hosts entry for local domain (if added):
+  - Remove `posts.com` from `/etc/hosts` (Mac/Linux) or `C:\Windows\System32\drivers\etc\hosts` (Windows).
