@@ -4,6 +4,8 @@ by Stephen Grider on Udemy
 Student: Haryati Hassan
 Started: 2024-Oct
 
+> TODO: Investigate and fix `skaffold dev` issues so the k8s-first local workflow is reliable.
+
 ### Blog Application
 This is a simple blog application that uses microservices architecture. The blog application consists of 3 services:
 1. Posts
@@ -18,6 +20,7 @@ This is a simple blog application that uses microservices architecture. The blog
 * The blog application uses an event bus to communicate between the services.
 * The blog application also includes a moderation service that moderates the comments.
 * The blog application includes a frontend client that allows users to create posts and comments.
+* Services are wired to Kubernetes DNS names (e.g., `event-bus-srv`, `posts-clusterip-srv`), so a Kubernetes environment is the intended runtime for local development.
 
 The blog application uses the following technologies:
 1. NodeJS / Express
@@ -118,49 +121,15 @@ The images for the services are available on Docker Hub:
 5. Moderation: haryati75/moderation
 6. Client: haryati75/client
 
-#### Docker cheatsheet
-**To build the images and run the containers:**
-1. Change URLs in all index.js to localhost instead of k8 service names
+### Preferred local dev workflow (Kubernetes-first)
+- Use a local Kubernetes (minikube, kind, or Docker Desktop) because service URLs in the source code expect k8s DNS names (`*-srv`).
+- Install ingress-nginx and map `posts.com` to the ingress address (hosts file for minikube/kind).
+- Run `skaffold dev` from repo root for live build/redeploy; if Skaffold is failing, fall back temporarily to manual `kubectl apply -f infra/k8s` and `kubectl rollout restart deployment <name>` after image rebuilds.
+- For targeted debugging, `kubectl port-forward svc/<service-name> <local-port>:<service-port>`.
 
-1. Go to the root directory of the service and run the following commands:
-```bash
-docker build -t haryati75/posts ./posts
-docker build -t haryati75/comments ./comments
-docker build -t haryati75/query ./query
-docker build -t haryati75/event-bus ./event-bus
-docker build -t haryati75/moderation ./moderation
-```
-
-2. Push the images to Docker Hub:
-```bash
-docker push haryati75/posts
-docker push haryati75/comments
-docker push haryati75/query
-docker push haryati75/event-bus
-docker push haryati75/moderation
-```
-
-3. Run the following commands to start the services as containers:
-```bash
-docker run -p 4000:4000 haryati75/posts
-docker run -p 4001:4001 haryati75/comments
-docker run -p 4002:4002 haryati75/query
-docker run -p 4005:4005 haryati75/event-bus
-docker run -p 4003:4003 haryati75/moderation
-```
-
-4. To clean up unused images, containers and volumes:
-```bash
-docker system prune -a --volumes
-docker image prune -a
-```
-
-5. To execute shell in container:
-```bash
-docker exec it <container)id> sh
-```
-
----
+### Note on plain Docker/localhost
+- The service code references Kubernetes service DNS names (e.g., `event-bus-srv`, `posts-clusterip-srv`, `comments-srv`). Running containers directly with `docker run` without changing these URLs will fail to resolve dependencies.
+- If you must run with plain Docker Compose or localhost, update the service URLs in each `index.js` (and rebuild images) or inject overrides via environment variables to point to `localhost` ports.
 ### Running the application in Kubernetes
 
 #### Kubernetes cheatsheet
